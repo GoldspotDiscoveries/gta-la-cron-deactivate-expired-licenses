@@ -1,0 +1,44 @@
+name: Plan Terraform PROD
+
+on: workflow_dispatch
+
+jobs:
+  terraform-plan-prod:
+    name: Plan Terraform Workspace PROD
+    runs-on: ubuntu-latest
+    # Defining some variable (besides secrets configure in GitHub interface)
+    env:
+      AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
+      AWS_SECRET_ACCESS_KEY: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Create `credentials` file
+        shell: bash
+        run: |
+          touch credentials
+          echo "[default]" >> credentials
+          echo "aws_access_key_id=${{ env.AWS_ACCESS_KEY_ID }}" >> credentials
+          echo "aws_secret_access_key=${{ env.AWS_SECRET_ACCESS_KEY }}" >> credentials
+          cat credentials
+
+      - name: Terraform Init
+        run: terraform init -backend-config="access_key=${{ env.AWS_ACCESS_KEY_ID }}" -backend-config="secret_key=${{ env.AWS_SECRET_ACCESS_KEY }}"
+
+      - name: Terraform List
+        run: terraform workspace list
+
+      - name: Set Workspace Name
+        run: |
+          if ${{ github.ref == 'refs/heads/main' }}; then
+            echo "workspace=prod" >> $GITHUB_ENV
+          else
+            echo "workspace=default" >> $GITHUB_ENV
+          fi
+
+      - name: Terraform Plan
+        run: terraform workspace select ${{ env.workspace }} && terraform plan
