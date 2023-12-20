@@ -1,6 +1,6 @@
-# gsp-tf-la-cron-stripe
+# gta-la-cron-deactivate-expired-licenses
 
-A Terraform file to manage a Lambda function that is triggered daily to check for upcoming renewals of Geotic subscriptions.
+Deactivate expired licenses.
 
 ## Set up
 
